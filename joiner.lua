@@ -210,7 +210,7 @@ task.spawn(function()
             timeintrade = 0
             repeat
                 timeintrade = timeintrade + task.wait(0.1)
-                if timeintrade >= 7 then
+                if timeintrade >= 20 then
                     game.ReplicatedStorage.Trade.DeclineTrade:FireServer()
                     break
                 end
