@@ -4,7 +4,7 @@
 # an `ajv2` command so the manager can be launched from anywhere.
 set -e
 
-REPO_RAW="https://raw.githubusercontent.com/aaalmaz0/mm2/main"
+REPO_RAW="https://raw.githubusercontent.com/Khangdz28/mm2/main"
 INSTALL_DIR="$HOME/ajv2"
 BIN_DIR="$PREFIX/bin"
 
