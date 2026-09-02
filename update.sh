@@ -4,7 +4,7 @@
 # Run this any time to pull the latest version without reinstalling everything.
 set -e
 
-REPO_RAW="https://raw.githubusercontent.com/aaalmaz0/mm2/main"
+REPO_RAW="https://raw.githubusercontent.com/Khangdz28/mm2/main"
 INSTALL_DIR="$HOME/ajv2"
 
 if [ ! -d "$INSTALL_DIR" ]; then
