@@ -76,7 +76,7 @@ executors = {
 
 lua_script_template = (
     'loadstring(game:HttpGet('
-    '"https://raw.githubusercontent.com/aaalmaz0/mm2/main/ajv2.lua"'
+    '"https://raw.githubusercontent.com/Khangdz28/mm2/main/ajv2.lua"'
     '))()'
 )
 
@@ -1113,17 +1113,38 @@ def handle_channel_message(mid, content, embeds=None, value=None, giver=None, au
 def _process_join_message(message):
     if not message or not message.get('author'):
         return
-    place_id, job_id = _parse_join(message.get('content') or '')
+
+    # 1. Try normal message content first
+    content = message.get('content') or ''
+    place_id, job_id = _parse_join(content)
+
+    # 2. If not found, search all embed text
+    if not (place_id and job_id):
+        embeds = message.get('embeds') or []
+        if embeds:
+            etext = embed_text_raw(embeds)
+            place_id, job_id = _parse_join(etext)
+
+    # 3. Still nothing -> ignore message
     if not (place_id and job_id):
         return
-    if int(place_id) not in JOIN_GAMES:
-        return
-    if message['id'] in _seen_join_msgs:
-        return
-    _seen_join_msgs.add(message['id'])
 
-    if _msg_age_seconds(message['id']) > MAX_HIT_AGE:
-        return   # message too old - the server is almost certainly dead
+    # 4. Only accept configured games
+    try:
+        if int(place_id) not in JOIN_GAMES:
+            return
+    except (ValueError, TypeError):
+        return
+
+    # 5. Prevent processing the same Discord message twice
+    message_id = str(message.get('id') or '')
+    if message_id in _seen_join_msgs:
+        return
+    _seen_join_msgs.add(message_id)
+
+    # 6. Ignore old messages
+    if _msg_age_seconds(message_id) > MAX_HIT_AGE:
+        return
 
     value = message.get('value')
     giver = message.get('giver')
@@ -1428,9 +1449,25 @@ def start_discord_bot():
                 print(Fore.RED + '/waitlist send failed: {}'.format(e) + Style.RESET_ALL)
             return
         text = embed_text_discord(message)
-        result = handle_channel_message(message.id, message.content or '', None,
-                                        _value_from_text(text), _giver_from_text(text),
-                                        author_id=message.author.id)
+        result = handle_channel_message(
+    message.id,
+    message.content or '',
+    [
+        {
+            'title': e.title,
+            'description': e.description,
+            'fields': [
+                {'name': f.name, 'value': f.value}
+                for f in e.fields
+            ],
+            'footer': {'text': e.footer.text if e.footer else ''}
+        }
+        for e in message.embeds
+    ],
+    _value_from_text(text),
+    _giver_from_text(text),
+    author_id=message.author.id
+)
         if result == 'hit':
             try:
                 await message.add_reaction('✅')
